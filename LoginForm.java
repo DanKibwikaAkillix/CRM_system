@@ -1,10 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.sql.*;
 
 public class LoginForm extends JFrame {
-    JTextField usernameField;
+    JTextField emailField;
     JPasswordField passwordField;
     JButton loginButton, registerButton;
 
@@ -28,14 +27,13 @@ public class LoginForm extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         add(panel, BorderLayout.CENTER);
 
-       
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        usernameLabel.setForeground(Color.WHITE);
-        panel.add(usernameLabel);
-        usernameField = new JTextField();
-        styleTextField(usernameField);
-        panel.add(usernameField);
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        emailLabel.setForeground(Color.WHITE);
+        panel.add(emailLabel);
+        emailField = new JTextField();
+        styleTextField(emailField);
+        panel.add(emailField);
 
         JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -45,7 +43,6 @@ public class LoginForm extends JFrame {
         styleTextField(passwordField);
         panel.add(passwordField);
 
-       
         loginButton = new JButton("Login");
         loginButton.setBackground(new Color(40, 167, 69));
         loginButton.setForeground(Color.WHITE);
@@ -54,7 +51,6 @@ public class LoginForm extends JFrame {
         loginButton.addActionListener(e -> loginUser());
         panel.add(loginButton);
 
-        
         registerButton = new JButton("Register");
         registerButton.setBackground(new Color(0, 123, 255));
         registerButton.setForeground(Color.WHITE);
@@ -66,11 +62,10 @@ public class LoginForm extends JFrame {
         });
         panel.add(registerButton);
 
-        setLocationRelativeTo(null); 
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
-   
     private void styleTextField(JTextField textField) {
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createLineBorder(new Color(0, 123, 255)));
@@ -88,35 +83,43 @@ public class LoginForm extends JFrame {
     }
 
     private void loginUser() {
-        String username = usernameField.getText();
+        String email = emailField.getText().trim();
         String password = new String(passwordField.getPassword());
 
         try (Connection conn = DBConnector.connect()) {
-            String sql = "SELECT * FROM Users WHERE userName = ? AND Password = ?";
+            String sql = "SELECT * FROM Users WHERE Email = ? AND Password = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, username);
+            stmt.setString(1, email);
             stmt.setString(2, password);
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String privilege = rs.getString("Privilege");
-                JOptionPane.showMessageDialog(this, "Welcome " + username + "!");
-               
-                if (privilege.equals("admin")) {
-                    // Open admin dashboard
-                    new AdminDashboard();
-                } else {
-                    // Open user dashboard
-                    new UserDashboard();
+                JOptionPane.showMessageDialog(this, "Welcome " + email + "!");
+
+                switch (privilege.toLowerCase()) {
+                    case "admin":
+                        new AdminDashboard(email);
+                        break;
+                    case "user":
+                        new UserDashboard(email);
+                        break;
+                    case "salesperson":
+                        new SalespersonDashboard(email);
+                        break;
+                    case "viewer":
+                        new ViewerDashboard(email);
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(this, "Unknown user role: " + privilege);
+                        return;
                 }
                 dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Invalid username or password.");
+                JOptionPane.showMessageDialog(this, "Invalid email or password.");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
         }
     }
-
-   
 }

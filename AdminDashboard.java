@@ -1,84 +1,211 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.sql.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class AdminDashboard extends JFrame {
-    JButton manageUsersButton, viewReportsButton, logoutButton;
 
-    public AdminDashboard() {
+    private String userEmail;
+
+    public AdminDashboard(String userEmail) {
+        this.userEmail = userEmail;
         setTitle("Admin Dashboard");
-        setSize(600, 400);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Header Panel with a Welcome Message
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(new Color(0, 123, 255));
-        JLabel welcomeLabel = new JLabel("Welcome to the Admin Dashboard!");
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        welcomeLabel.setForeground(Color.WHITE);
-        headerPanel.add(welcomeLabel);
-        add(headerPanel, BorderLayout.NORTH);
+        JPanel topPanel = createTopPanel();
+        add(topPanel, BorderLayout.NORTH);
 
-        // Main Panel with Buttons for Different Admin Actions
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(3, 1, 10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel statsPanel = createStatsPanel();
+        add(statsPanel, BorderLayout.CENTER);
 
-        // Manage Users Button
-        manageUsersButton = new JButton("Manage Users");
-        styleButton(manageUsersButton);
-        manageUsersButton.addActionListener(e -> manageUsers());
-        mainPanel.add(manageUsersButton);
+        JPanel sidePanel = createSidePanel();
+        add(sidePanel, BorderLayout.EAST);
 
-        // View Reports Button
-        viewReportsButton = new JButton("View Reports");
-        styleButton(viewReportsButton);
-        viewReportsButton.addActionListener(e -> viewReports());
-        mainPanel.add(viewReportsButton);
-
-        // Logout Button
-        logoutButton = new JButton("Logout");
-        styleButton(logoutButton);
-        logoutButton.addActionListener(e -> logout());
-        mainPanel.add(logoutButton);
-
-        add(mainPanel, BorderLayout.CENTER);
-
-        setLocationRelativeTo(null); // Center the window
         setVisible(true);
     }
 
-    // Button styling
-    private void styleButton(JButton button) {
-        button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setBackground(new Color(40, 167, 69));
+    private JPanel createTopPanel() {
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(new Color(60, 63, 65));
+        topPanel.setPreferredSize(new Dimension(getWidth(), 100));
+
+        JLabel nameLabel = new JLabel("Customer Relationship  Management (CRM)");
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        nameLabel.setForeground(Color.WHITE);
+
+        JLabel profileLabel = new JLabel();
+        profileLabel.setPreferredSize(new Dimension(80, 80));
+
+        fetchUserProfile(nameLabel, profileLabel);
+
+        JButton logoutButton = new JButton(new ImageIcon("images/logout.png"));
+        logoutButton.setContentAreaFilled(false);
+        logoutButton.setBorderPainted(false);
+        logoutButton.setFocusable(false);
+        logoutButton.addActionListener(e -> logout());
+
+        ImageIcon logoutIcon = (ImageIcon) logoutButton.getIcon();
+        Image logoutImage = logoutIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        logoutButton.setIcon(new ImageIcon(logoutImage));
+
+        JPanel topRightPanel = new JPanel(new BorderLayout());
+        topRightPanel.add(logoutButton, BorderLayout.WEST);
+        topRightPanel.add(profileLabel, BorderLayout.EAST);
+
+        topPanel.add(nameLabel, BorderLayout.WEST);
+        topPanel.add(topRightPanel, BorderLayout.EAST);
+
+        return topPanel;
+    }
+
+    private JPanel createStatsPanel() {
+        JPanel statsPanel = new JPanel(new GridLayout(2, 3, 20, 20));
+        statsPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        JLabel totalCustomers = createStatLabel("Total Customers: 0");
+        JLabel activeCustomers = createStatLabel("Active Customers: 0");
+        JLabel inactiveCustomers = createStatLabel("Inactive Customers: 0");
+        JLabel totalItems = createStatLabel("Total Products: 0");
+        JLabel totalSalesManagers = createStatLabel("Sales Managers: 0");
+        JLabel totalViewers = createStatLabel("Viewers: 0");
+
+        statsPanel.add(totalCustomers);
+        statsPanel.add(activeCustomers);
+        statsPanel.add(inactiveCustomers);
+        statsPanel.add(totalItems);
+        statsPanel.add(totalSalesManagers);
+        statsPanel.add(totalViewers);
+
+        loadStatistics(totalCustomers, activeCustomers, inactiveCustomers, totalItems, totalSalesManagers, totalViewers);
+
+        return statsPanel;
+    }
+
+    private JLabel createStatLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", Font.BOLD, 16));
+        label.setOpaque(true);
+        label.setBackground(Color.WHITE);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        label.setPreferredSize(new Dimension(150, 60));
+        label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        return label;
+    }
+
+    private JPanel createSidePanel() {
+        JPanel sidePanel = new JPanel();
+        sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
+
+        JButton manageCustomersButton = createSideButton("Manage Customers", e -> openCustomerCRUD());
+        JButton manageSalespersonsButton = createSideButton("Manage Salespersons", e -> openSalespersonCRUD());
+        JButton manageItemsButton = createSideButton("Manage Products", e -> openItemsCRUD());
+        JButton manageProfileButton = createSideButton("Manage My Profile", e -> openProfileManagement());
+
+        sidePanel.add(manageCustomersButton);
+        sidePanel.add(Box.createVerticalStrut(10));
+        sidePanel.add(manageSalespersonsButton);
+        sidePanel.add(Box.createVerticalStrut(10));
+        sidePanel.add(manageItemsButton);
+        sidePanel.add(Box.createVerticalStrut(10));
+        sidePanel.add(manageProfileButton);
+
+        return sidePanel;
+    }
+
+    private JButton createSideButton(String text, ActionListener listener) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 16));
+        button.setBackground(new Color(70, 130, 180));
         button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setPreferredSize(new Dimension(200, 40));
+        button.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+        button.setPreferredSize(new Dimension(250, 50));
+        button.setFocusable(false);
+        button.setContentAreaFilled(true);
+        button.addActionListener(listener);
+        return button;
     }
 
-    // Method to manage users (admin can add, delete, or update users)
-    private void manageUsers() {
-        JOptionPane.showMessageDialog(this, "Managing Users...");
-        // Add functionality to manage users (e.g., adding/removing users, changing privileges)
-    }
-
-    // Method to view reports (admin can view system or usage reports)
-    private void viewReports() {
-        JOptionPane.showMessageDialog(this, "Displaying Reports...");
-        // Add functionality to view reports (e.g., sales reports, user activity reports)
-    }
-
-    // Logout method
-    private void logout() {
-        JOptionPane.showMessageDialog(this, "Logging out...");
-        // Add logic for logging out (close current session, etc.)
+    private void openCustomerCRUD() {
+        new CustomerCRUDFrame();
         dispose();
-        new LoginForm(); // Redirect to the login page
     }
 
-    public static void main(String[] args) {
-        new AdminDashboard();
+    private void openSalespersonCRUD() {
+        new SalespersonCRUDFrame();
+        dispose();
+    }
+
+    private void openItemsCRUD() {
+        new ItemsCRUDFrame();
+        dispose();
+    }
+
+    private void openProfileManagement() {
+        new UpdateProfileFrame(userEmail);
+        dispose();
+    }
+
+    private void fetchUserProfile(JLabel nameLabel, JLabel profileLabel) {
+        try (Connection conn = DBConnector.connect()) {
+            String sql = "SELECT Name, Profilepicture FROM Users WHERE Email = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, userEmail);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String name = rs.getString("name");
+                nameLabel.setText(" Customer Relationship  Management (CRM)" + name + "!");
+                String picturePath = rs.getString("Profilepicture");
+
+                if (picturePath != null && !picturePath.isEmpty()) {
+                    ImageIcon imageIcon = new ImageIcon(picturePath);
+                    Image img = imageIcon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+                    profileLabel.setIcon(new ImageIcon(img));
+                } else {
+                    profileLabel.setText("Manage My Profile");
+                    profileLabel.setIcon(null);
+                }
+
+                profileLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+                profileLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                profileLabel.setVerticalAlignment(SwingConstants.CENTER);
+                profileLabel.setPreferredSize(new Dimension(80, 80));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadStatistics(JLabel totalCustomers, JLabel activeCustomers, JLabel inactiveCustomers,
+                                JLabel totalItems, JLabel salesManagers, JLabel viewers) {
+        try (Connection conn = DBConnector.connect()) {
+            Statement stmt = conn.createStatement();
+
+            totalCustomers.setText("Total Customers: " + getCount(stmt, "Customer"));
+            activeCustomers.setText("Active Customers: " + getCount(stmt, "Customer WHERE status = 'active'"));
+            inactiveCustomers.setText("Inactive Customers: " + getCount(stmt, "Customer WHERE status = 'inactive'"));
+            totalItems.setText("Total Products: " + getCount(stmt, "Items"));
+            salesManagers.setText("Sales Managers: " + getCount(stmt, "User WHERE Privilege = 'sales_manager'"));
+            viewers.setText("Viewers: " + getCount(stmt, "User WHERE Privilege = 'viewer'"));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int getCount(Statement stmt, String table) throws SQLException {
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table);
+        if (rs.next()) {
+            return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    private void logout() {
+        new LoginForm();
+        dispose();
     }
 }
