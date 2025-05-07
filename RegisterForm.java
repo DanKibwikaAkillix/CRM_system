@@ -18,7 +18,6 @@ public class RegisterForm extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Gradient background panel
         JPanel panel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -33,49 +32,41 @@ public class RegisterForm extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         add(panel, BorderLayout.CENTER);
 
-        // Username
         panel.add(createLabel("Username:"));
         usernameField = new JTextField();
         styleTextField(usernameField);
         panel.add(usernameField);
 
-        // Email
         panel.add(createLabel("Email:"));
         emailField = new JTextField();
         styleTextField(emailField);
         panel.add(emailField);
 
-        // Password
         panel.add(createLabel("Password:"));
         passwordField = new JPasswordField();
         styleTextField(passwordField);
         panel.add(passwordField);
 
-        // Privilege
         panel.add(createLabel("Privilege:"));
         privilegeBox = new JComboBox<>(new String[]{"user", "admin", "salesPerson", "viewer"});
         panel.add(privilegeBox);
 
-        // Profile Picture Path
         panel.add(createLabel("Profile Picture:"));
         profilePicturePathField = new JTextField();
         profilePicturePathField.setEditable(false);
         styleTextField(profilePicturePathField);
         panel.add(profilePicturePathField);
 
-        // Select Image Button
         selectImageButton = new JButton("Select Image");
         styleButton(selectImageButton, new Color(0, 123, 255));
         selectImageButton.addActionListener(e -> selectImage());
         panel.add(selectImageButton);
 
-        // Register Button
         JButton registerBtn = new JButton("Register");
         styleButton(registerBtn, new Color(40, 167, 69));
         registerBtn.addActionListener(e -> registerUser());
         panel.add(registerBtn);
 
-        // Back to Login Button
         JButton loginBtn = new JButton("Back to Login");
         styleButton(loginBtn, new Color(108, 117, 125));
         loginBtn.addActionListener(e -> {
@@ -88,7 +79,6 @@ public class RegisterForm extends JFrame {
         setVisible(true);
     }
 
-    // Label with styling
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Arial", Font.BOLD, 14));
@@ -96,7 +86,6 @@ public class RegisterForm extends JFrame {
         return label;
     }
 
-    // Text field styling
     private void styleTextField(JTextField textField) {
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createLineBorder(new Color(0, 123, 255)));
@@ -105,7 +94,6 @@ public class RegisterForm extends JFrame {
         textField.setPreferredSize(new Dimension(200, 30));
     }
 
-    // Button styling
     private void styleButton(JButton button, Color bgColor) {
         button.setBackground(bgColor);
         button.setForeground(Color.WHITE);
@@ -113,7 +101,6 @@ public class RegisterForm extends JFrame {
         button.setFocusPainted(false);
     }
 
-    // Select image and save to images/
     private void selectImage() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Select Profile Picture");
@@ -141,7 +128,6 @@ public class RegisterForm extends JFrame {
         }
     }
 
-    // Register user into DB
     private void registerUser() {
         try (Connection conn = DBConnector.connect()) {
             String sql = "INSERT INTO Users (userName, Email, Password, status, Privilege, Profile_picture) VALUES (?, ?, ?, ?, ?, ?)";

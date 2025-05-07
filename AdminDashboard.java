@@ -189,8 +189,8 @@ public class AdminDashboard extends JFrame {
             activeCustomers.setText("Active Customers: " + getCount(stmt, "Customer WHERE status = 'active'"));
             inactiveCustomers.setText("Inactive Customers: " + getCount(stmt, "Customer WHERE status = 'inactive'"));
             totalItems.setText("Total Products: " + getCount(stmt, "Items"));
-            salesManagers.setText("Sales Managers: " + getCount(stmt, "User WHERE Privilege = 'sales_manager'"));
-            viewers.setText("Viewers: " + getCount(stmt, "User WHERE Privilege = 'viewer'"));
+            salesManagers.setText("Sales Managers: " + getCount(stmt, "Users WHERE Privilege = 'salesperson'"));
+            viewers.setText("Viewers: " + getCount(stmt, "Users WHERE Privilege = 'viewer'"));
         } catch (SQLException e) {
             e.printStackTrace();
         }
