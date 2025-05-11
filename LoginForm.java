@@ -105,7 +105,7 @@ public class LoginForm extends JFrame {
                         new UserDashboard(email);
                         break;
                     case "salesperson":
-                        new SalespersonDashboard(email);
+                        new SalesPersonDashbaord(email);
                         break;
                     case "viewer":
                         new ViewerDashboard(email);
